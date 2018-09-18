@@ -1,11 +1,12 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var connection = null;
 var oradb;
 exports.mainRowsProcessed = 0;
 exports.proc = null;
 exports.najax = null;
-var prefixFile = ["fra", "eng", "nor", "iku"];
-var xmlTag = ["FRA", "ENG", "NOR", "IKU"];
+var prefixFile = ["eng", "nor", "sat"];
+var xmlTag = ["ENG", "NOR", "SAT"];
 var docObjects = [];
 var fieldArray = [];
 var mainResult = null;
@@ -25,6 +26,7 @@ function loadResultset(connection, sql, functionToCall) {
             console.error(err);
         }
         mainResult = result;
+        console.log("hallo");
         functionToCall(result);
     });
 }
@@ -50,18 +52,24 @@ function runThroughMainTable(result) {
 exports.runThroughMainTable = runThroughMainTable;
 function processMainTable(result, row) {
     var abstract = row.GJENSTANDSBESKRIVELSE;
-    for (var temp = 0; temp < xmlTag.length; temp++) {
-        var pos = abstract.indexOf("<" + xmlTag[temp] + ">");
-        if (pos != -1) {
-            pos += 2 + xmlTag[temp].length;
-            var pos2 = abstract.indexOf("</" + xmlTag[temp] + ">");
-            if (pos2 == -1)
-                docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos);
+    if (abstract != null) {
+        for (var temp = 0; temp < xmlTag.length; temp++) {
+            var pos = abstract.indexOf("<" + xmlTag[temp] + ">");
+            if (pos != -1) {
+                pos += 2 + xmlTag[temp].length;
+                var pos2 = abstract.indexOf("</" + xmlTag[temp] + ">");
+                if (pos2 == -1)
+                    docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos);
+                else
+                    docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos, pos2);
+            }
             else
-                docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos, pos2);
+                docObjects[temp].gjenstandsbeskrivelse = "";
         }
-        else
-            docObjects[temp].gjenstandsbeskrivelse = "";
+    }
+    else {
+        for (var temp_1 = 0; temp_1 < xmlTag.length; temp_1++)
+            docObjects[temp_1].gjenstandsbeskrivelse = "";
     }
     var fotoId = row.FOTOID;
     var hasPhoto = false;
@@ -113,6 +121,7 @@ function runGTyper(result, gjenstandsid) {
                 var st2 = eval(st);
                 if (st2 != null && st2.length > 0)
                     fieldArray[temp].push(st2);
+                //        eval("fieldArray[temp].push("+st+")");
             }
             runGTyper(result, gjenstandsid);
             return;
@@ -299,7 +308,8 @@ function writeToIndex(index) {
     formData.language = prefixFile[index];
     formData.elasticdata = JSON.stringify(docObjects[index], null, 2);
     formData.id = docObjects[index].id;
-    exports.najax({ url: 'http://itfds-prod03.uio.no/es/GjoaUpdate.php',
+    exports.najax({
+        url: 'http://itfds-prod03.uio.no/es/SantalUpdate.php',
         type: 'POST',
         data: formData,
         success: function (data) {

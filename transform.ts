@@ -5,8 +5,8 @@ export let proc = null;
 export let najax = null;
 
 
-var prefixFile = ["fra", "eng", "nor", "iku"];
-var xmlTag = ["FRA", "ENG", "NOR", "IKU"];
+var prefixFile = ["eng", "nor", "sat"];
+var xmlTag = ["ENG", "NOR", "SAT"];
 let docObjects = [];
 let fieldArray = [];
 let mainResult = null;
@@ -28,7 +28,8 @@ export function loadResultset(connection, sql: string, functionToCall) {
     },
     function (err, result) {
       if (err) { console.error(err); }
-      mainResult= result;
+      mainResult = result;
+      console.log("hallo");
       functionToCall(result);
     });
 }
@@ -55,23 +56,28 @@ export function runThroughMainTable(result) {
 
 function processMainTable(result, row) {
   var abstract: string = row.GJENSTANDSBESKRIVELSE;
-  for (var temp = 0; temp < xmlTag.length; temp++) {
-    var pos = abstract.indexOf("<" + xmlTag[temp] + ">");
-    if (pos != -1) {
-      pos += 2 + xmlTag[temp].length;
-      var pos2 = abstract.indexOf("</" + xmlTag[temp] + ">")
-      if (pos2 == -1)
-        docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos);
-      else
-        docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos, pos2);
-    } else docObjects[temp].gjenstandsbeskrivelse = "";
+  if (abstract != null) {
+    for (var temp = 0; temp < xmlTag.length; temp++) {
+      var pos = abstract.indexOf("<" + xmlTag[temp] + ">");
+      if (pos != -1) {
+        pos += 2 + xmlTag[temp].length;
+        var pos2 = abstract.indexOf("</" + xmlTag[temp] + ">")
+        if (pos2 == -1)
+          docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos);
+        else
+          docObjects[temp].gjenstandsbeskrivelse = abstract.substring(pos, pos2);
+      } else docObjects[temp].gjenstandsbeskrivelse = "";
+    }
+  }else{
+    for(let temp =0;temp < xmlTag.length;temp++)
+      docObjects[temp].gjenstandsbeskrivelse = "";
   }
   var fotoId = row.FOTOID;
   let hasPhoto = false;
-  if(fotoId!=null)
-     hasPhoto=true
+  if (fotoId != null)
+    hasPhoto = true
   else
-     hasPhoto=false;
+    hasPhoto = false;
 
   for (var temp = 0; temp < xmlTag.length; temp++) {
     docObjects[temp].id = row.GJENSTANDID;
@@ -79,11 +85,11 @@ function processMainTable(result, row) {
     docObjects[temp].unr = row.UNR;
     docObjects[temp].fotoid = row.FOTOID;
     docObjects[temp].fotograf = row.FOTOGRAF;
-    if(hasPhoto == true){
-      docObjects[temp].mediaId=fotoId;
-      docObjects[temp].harFoto=1;
-    }else
-      docObjects[temp].harFoto=0;
+    if (hasPhoto == true) {
+      docObjects[temp].mediaId = fotoId;
+      docObjects[temp].harFoto = 1;
+    } else
+      docObjects[temp].harFoto = 0;
   }
 
   loadGTyper(row.GJENSTANDID);
@@ -105,24 +111,24 @@ function loadGTyper(gjenstandid) {
       fieldArray = new Array();
       for (var temp = 0; temp < prefixFile.length - 1; temp++)
         fieldArray.push(new Array());
-      runGTyper(result,gjenstandid);
+      runGTyper(result, gjenstandid);
       //        functionToCall(result);
     });
 }
 
-function runGTyper(result,gjenstandsid) {
+function runGTyper(result, gjenstandsid) {
   result.resultSet.getRow(function (err, row) {
     if (err)
       return;
     if (row) {
       for (var temp = 0; temp < prefixFile.length - 1; temp++) {
-        var st = "row."+prefixFile[temp].toUpperCase() + "_TYPE";
+        var st = "row." + prefixFile[temp].toUpperCase() + "_TYPE";
         var st2 = eval(st);
-        if(st2 != null && st2.length >0)
+        if (st2 != null && st2.length > 0)
           fieldArray[temp].push(st2);
-//        eval("fieldArray[temp].push("+st+")");
+        //        eval("fieldArray[temp].push("+st+")");
       }
-      runGTyper(result,gjenstandsid);
+      runGTyper(result, gjenstandsid);
       return;
     }
     for (var i = 0; i < docObjects.length - 1; i++)
@@ -131,6 +137,7 @@ function runGTyper(result,gjenstandsid) {
     loadGTermer(gjenstandsid)
 
   })
+
 }
 
 function loadGTermer(gjenstandid) {
@@ -147,22 +154,22 @@ function loadGTermer(gjenstandid) {
       fieldArray = new Array();
       for (var temp = 0; temp < prefixFile.length - 1; temp++)
         fieldArray.push(new Array());
-      runGTermer(result,gjenstandid);
+      runGTermer(result, gjenstandid);
       //        functionToCall(result);
     });
 }
-function runGTermer(result,gjenstandid) {
+function runGTermer(result, gjenstandid) {
   result.resultSet.getRow(function (err, row) {
     if (err)
       return;
     if (row) {
       for (var temp = 0; temp < prefixFile.length - 1; temp++) {
-        var st = "row."+prefixFile[temp].toUpperCase() + "_TERM";
+        var st = "row." + prefixFile[temp].toUpperCase() + "_TERM";
         var st2 = eval(st);
-        if(st2 != null && st2.length >0)
+        if (st2 != null && st2.length > 0)
           fieldArray[temp].push(st2);
       }
-      runGTermer(result,gjenstandid);
+      runGTermer(result, gjenstandid);
       return;
     }
     for (var i = 0; i < docObjects.length - 1; i++)
@@ -173,7 +180,7 @@ function runGTermer(result,gjenstandid) {
   })
 }
 
-let materialeArray= []; 
+let materialeArray = [];
 let materialeFacetArray = [];
 
 function loadMateriale(gjenstandid) {
@@ -187,7 +194,7 @@ function loadMateriale(gjenstandid) {
     },
     function (err, result) {
       if (err) { console.error(err); return; }
-      materialeArray=new Array();
+      materialeArray = new Array();
       materialeFacetArray = new Array();
       for (var i = 0; i < prefixFile.length - 1; i++) {
         materialeArray.push(new Array());
@@ -199,47 +206,47 @@ function loadMateriale(gjenstandid) {
 }
 
 // loadMaterialTyper(gjenstandid,languagePrefix+"_materialtype",languagePrefix+"_materiale");
-function runMateriale(result,gjenstandid) {
+function runMateriale(result, gjenstandid) {
   result.resultSet.getRow(function (err, row) {
     if (err)
       return;
     if (row) {
       for (var temp = 0; temp < prefixFile.length - 1; temp++) {
-        var st = "row."+prefixFile[temp].toUpperCase() + "_MATERIALTYPE";
+        var st = "row." + prefixFile[temp].toUpperCase() + "_MATERIALTYPE";
         var materialType = eval(st);
-        st = "row."+prefixFile[temp].toUpperCase() + "_MATERIALE";
+        st = "row." + prefixFile[temp].toUpperCase() + "_MATERIALE";
         var materiale = eval(st);
-        loadFacetMateriale(temp,materialType,materiale);
+        loadFacetMateriale(temp, materialType, materiale);
       }
-      runMateriale(result,gjenstandid);
+      runMateriale(result, gjenstandid);
       return;
     }
-    for (var i = 0; i < docObjects.length - 1; i++){
+    for (var i = 0; i < docObjects.length - 1; i++) {
       docObjects[i].facetMateriale = materialeFacetArray[i];
       docObjects[i].materiale = materialeArray[i];
-    }  
+    }
     result.resultSet.close();
     loadGEmisk(gjenstandid);
 
   })
 }
 
-function loadFacetMateriale(index,materialType,materiale){
+function loadFacetMateriale(index, materialType, materiale) {
   var substitute = "Not given";
   var path = "";
-  if(materialType == null && materiale == null)
+  if (materialType == null && materiale == null)
     return;
-  path += materialType==null?substitute:materialType;
+  path += materialType == null ? substitute : materialType;
   materialeFacetArray[index].push(path);
-  if(materiale !=null){
-    if(materialType != null && materialType==materiale){
-        materialeArray[index].push(path);
-        return;
+  if (materiale != null) {
+    if (materialType != null && materialType == materiale) {
+      materialeArray[index].push(path);
+      return;
     }
     path += "$" + materiale;
     materialeFacetArray[index].push(path);
-  } 
-  materialeArray[index].push(path); 
+  }
+  materialeArray[index].push(path);
 }
 
 
@@ -257,25 +264,25 @@ function loadGEmisk(gjenstandid) {
     function (err, result) {
       if (err) { console.error(err); return; }
       emiskArray = new Array();
-      runEmisk(result,gjenstandid);
+      runEmisk(result, gjenstandid);
       //        functionToCall(result);
     });
 }
 
-function runEmisk(result,gjenstandid){
+function runEmisk(result, gjenstandid) {
   result.resultSet.getRow(function (err, row) {
     if (err)
       return;
     if (row) {
       emiskArray.push(row.GJENSTANDEMISK);
-      runEmisk(result,gjenstandid);
+      runEmisk(result, gjenstandid);
       return;
     }
-     docObjects[docObjects.length-1].gjenstandemisk=emiskArray;
-     result.resultSet.close();
+    docObjects[docObjects.length - 1].gjenstandemisk = emiskArray;
+    result.resultSet.close();
     loadMaterialeEmisk(gjenstandid);
 
-  }) 
+  })
 }
 
 let emiskMaterialeArray = [];
@@ -293,48 +300,49 @@ function loadMaterialeEmisk(gjenstandid) {
       if (err) { console.error(err); return; }
       emiskMaterialeArray = new Array();
       matremiskArray = new Array();
-      runMaterialeEmisk(result,gjenstandid);
+      runMaterialeEmisk(result, gjenstandid);
       //        functionToCall(result);
     });
 }
 
-function runMaterialeEmisk(result,gjenstandid){
+function runMaterialeEmisk(result, gjenstandid) {
   result.resultSet.getRow(function (err, row) {
     if (err)
       return;
     if (row) {
-      var st:string = row.MATREMISK;
-      if(st.length > 0 && st.charCodeAt(0) > 4000)
+      var st: string = row.MATREMISK;
+      if (st.length > 0 && st.charCodeAt(0) > 4000)
         emiskMaterialeArray.push(st);
-      matremiskArray.push(st);  
-      runMaterialeEmisk(result,gjenstandid);
+      matremiskArray.push(st);
+      runMaterialeEmisk(result, gjenstandid);
       return;
     }
-    docObjects[docObjects.length-1].materiale=emiskMaterialeArray;
-    docObjects[docObjects.length-1].matremisk=matremiskArray;
+    docObjects[docObjects.length - 1].materiale = emiskMaterialeArray;
+    docObjects[docObjects.length - 1].matremisk = matremiskArray;
     result.resultSet.close();
-//    runThroughMainTable(mainResult);
+    //    runThroughMainTable(mainResult);
     writeToIndex(0);
 
-  }) 
+  })
 }
 
-function writeToIndex(index){
-  if(index >= docObjects.length){
-     runThroughMainTable(mainResult);
-     return;
+function writeToIndex(index) {
+  if (index >= docObjects.length) {
+    runThroughMainTable(mainResult);
+    return;
   }
-  var formData:any = new Object();
+  var formData: any = new Object();
   formData.language = prefixFile[index];
-  formData.elasticdata= JSON.stringify(docObjects[index],null,2);
+  formData.elasticdata = JSON.stringify(docObjects[index], null, 2);
   formData.id = docObjects[index].id;
-  najax({ url: 'http://itfds-prod03.uio.no/es/GjoaUpdate.php', 
-          type: 'POST', 
-          data:formData,  
-          success: function (data) {
-             if(index ==0)
-               console.log(data);
-             writeToIndex(index+1);
-          }
-});
+  najax({
+    url: 'http://itfds-prod03.uio.no/es/SantalUpdate.php',
+    type: 'POST',
+    data: formData,
+    success: function (data) {
+      if (index == 0)
+        console.log(data);
+      writeToIndex(index + 1);
+    }
+  });
 }

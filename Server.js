@@ -32,11 +32,10 @@ var server = app.listen(8081, function () {
   transform.setOracle(oracledb);
   transform.najax = najax;
   console.log(JSON.stringify(tools.dbConnecction,null,2));
-  process.exit();
   openConnection(generateIndex);
 })
 
-
+//WEB_SANTAL_GJENSTANDER 
 function generateIndex(){
   if(conn==null){
     console.log("openconnection returnerer null");  
@@ -44,7 +43,7 @@ function generateIndex(){
   }  
   console.log("fik connection");  
   transform.setConnection(conn);
-  transform.loadResultset(conn,"SELECT * from USD_ETNO_GJENSTAND_O.web_amundsens_gjoagjenstander order by gjenstandid",transform.runThroughMainTable);
+  transform.loadResultset(conn,"SELECT *  FROM  USD_ETNO_GJENSTAND_O.WEB_SANTAL_GJENSTANDER  order by gjenstandid",transform.runThroughMainTable);
 }
 
 function openConnection(functionToCall){
